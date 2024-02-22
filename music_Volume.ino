@@ -56,6 +56,14 @@ void setup()
     pinMode(RIGHT_CS_PIN, OUTPUT);
     // Start playing
     DF1201S.start();
+    Serial.print("The time length the current song has played:");
+    // Get the time length the current song has played
+    Serial.println(DF1201S.getCurTime());
+
+    Serial.print("The total length of the currently-playing song: ");
+    // Get the total length of the currently-playing song
+    Serial.println(DF1201S.getTotalTime());
+    Serial.print("The name of the currently-playing file: ");
 }
 
 void loop()
@@ -78,14 +86,10 @@ void loop()
         }
     }
 
-    Serial.print("The time length the current song has played:");
-    // Get the time length the current song has played
-    Serial.println(DF1201S.getCurTime());
-
-    Serial.print("The total length of the currently-playing song: ");
-    // Get the total length of the currently-playing song
-    Serial.println(DF1201S.getTotalTime());
-    Serial.print("The name of the currently-playing file: ");
+        if (DF1201S.getCurTime() >= DF1201S.getTotalTime())
+    {
+        DF1201S.start();
+    }
 }
 
 // Smooth transition between channels
