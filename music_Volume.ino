@@ -2,19 +2,19 @@
 #include <SoftwareSerial.h>
 
 // Define DFPlayer Mini RX and TX pins
-#define DFPLAYER_RX 2
-#define DFPLAYER_TX 3
+#define DFPLAYER_RX 3
+#define DFPLAYER_TX 2
 
 // Define PIR sensor pin
-#define PIR_SENSOR_PIN 4
+#define PIR_SENSOR_PIN 8
 
 // Define x9c103s module control pins for left and right channels
-#define LEFT_INC_PIN 5
+#define LEFT_INC_PIN 4
 #define LEFT_UD_PIN 6
-#define LEFT_CS_PIN 7
-#define RIGHT_INC_PIN 8
-#define RIGHT_UD_PIN 9
-#define RIGHT_CS_PIN 10
+#define LEFT_CS_PIN 10 // not used
+#define RIGHT_INC_PIN 5
+#define RIGHT_UD_PIN 7
+#define RIGHT_CS_PIN 11    // not used
 int leftResistance = 0;    // Initial resistance value for left channel
 int rightResistance = 255; // Initial resistance value for right channel
 
@@ -86,7 +86,7 @@ void loop()
         }
     }
 
-        if (DF1201S.getCurTime() >= DF1201S.getTotalTime())
+    if (DF1201S.getCurTime() >= DF1201S.getTotalTime())
     {
         DF1201S.start();
     }
@@ -101,29 +101,29 @@ void smoothTransition()
         {
             leftResistance = 255 - i; // Decrease resistance for left channel
             rightResistance = i;      // Increase resistance for right channel
-            setResistance(LEFT_INC_PIN, LEFT_UD_PIN, LEFT_CS_PIN, leftResistance);
-            setResistance(RIGHT_INC_PIN, RIGHT_UD_PIN, RIGHT_CS_PIN, rightResistance);
+            setResistance(LEFT_INC_PIN, LEFT_UD_PIN, LEFT_CS_PIN, leftResistance, HIGH);
+            setResistance(RIGHT_INC_PIN, RIGHT_UD_PIN, RIGHT_CS_PIN, rightResistance, LOW);
             delay(10); // Adjust as needed for transition speed
         }
         else
         {
             leftResistance = 255 - i; // Decrease resistance for left channel
             rightResistance = i;      // Increase resistance for right channel
-            setResistance(LEFT_INC_PIN, LEFT_UD_PIN, LEFT_CS_PIN, rightResistance);
-            setResistance(RIGHT_INC_PIN, RIGHT_UD_PIN, RIGHT_CS_PIN, leftResistance);
+            setResistance(LEFT_INC_PIN, LEFT_UD_PIN, LEFT_CS_PIN, rightResistance, LOW);
+            setResistance(RIGHT_INC_PIN, RIGHT_UD_PIN, RIGHT_CS_PIN, leftResistance, HIGH);
             delay(10); // Adjust as needed for transition speed
         }
     }
 }
 
 // Set resistance using x9c103s module
-void setResistance(int incPin, int udPin, int csPin, int value)
+void setResistance(int incPin, int udPin, int csPin, int value, bool dir)
 {
     digitalWrite(csPin, LOW); // Select the device
     delayMicroseconds(1);
 
     // Set direction (up or down)
-    digitalWrite(udPin, HIGH); // Up direction
+    digitalWrite(udPin, dir); // Up direction
 
     // Increment/Decrement resistance value
     for (int i = 0; i < value; i++)
