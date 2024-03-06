@@ -1,12 +1,18 @@
 #include <DFRobot_DF1201S.h>
 #include <SoftwareSerial.h>
+/*
+ 
+ * 1 - INC - Arduino pin 4
+ * 2 - U/D - Arduino pin 6
+ * 3 - VH  - 5V
+ * 4 - VSS - GND
+ * 5 - VW  - Output: 
+ * 6 - VL  - GND
+ * 7 - CS  - Arduino pin 10
+ * 8 - VCC - 5V
+ */
 
-// Define DFPlayer Mini RX and TX pins
-#define DFPLAYER_RX 3
-#define DFPLAYER_TX 2
-
-// Define PIR sensor pin
-#define PIR_SENSOR_PIN 8
+#include <DigiPotX9Cxxx.h>
 
 // Define x9c103s module control pins for left and right channels
 #define LEFT_INC_PIN 4
@@ -14,7 +20,17 @@
 #define LEFT_CS_PIN 10 // not used
 #define RIGHT_INC_PIN 5
 #define RIGHT_UD_PIN 7
-#define RIGHT_CS_PIN 11    // not used
+#define RIGHT_CS_PIN 11 // not used
+
+DigiPot left_pot(LEFT_INC_PIN, LEFT_UD_PIN, LEFT_CS_PIN);
+DigiPot right_pot(RIGHT_INC_PIN, RIGHT_UD_PIN, RIGHT_CS_PIN);
+// Define DFPlayer Mini RX and TX pins
+#define DFPLAYER_RX 3
+#define DFPLAYER_TX 2
+
+// Define PIR sensor pin
+#define PIR_SENSOR_PIN 8
+
 int leftResistance = 0;    // Initial resistance value for left channel
 int rightResistance = 255; // Initial resistance value for right channel
 
@@ -65,24 +81,30 @@ void setup()
     Serial.println(DF1201S.getTotalTime());
     Serial.print("The name of the currently-playing file: ");
 }
-
+bool left = true;
+bool right = true;
 void loop()
 {
     // Check for motion
     if (digitalRead(PIR_SENSOR_PIN) == HIGH)
     {
-        if (!motionDetected)
+        motionDetected = true;
+        if (left)
         {
-            motionDetected = true;
-            smoothTransition(); // Smoothly transition to right channel
+            Serial.println("motion detected transitioning to right");
+            right = true;
+            right_smoothTransition(); // Smoothly transition to right channel
+            left = false;
         }
     }
     else
     {
-        if (motionDetected)
+        if (right)
         {
-            motionDetected = false;
-            smoothTransition(); // Smoothly transition to left channel
+            Serial.println("motion not detected transitioning to left");
+            left = true;
+            left_smoothTransition(); // Smoothly transition to left channel
+            right = false;
         }
     }
 
@@ -92,10 +114,39 @@ void loop()
     }
 }
 
+void left_smoothTransition()
+{
+    for (int i = 0; i < 100; i++)
+    {
+        left_pot.increase(1);
+        delay(20);
+    }
+
+    for (int i = 0; i < 100; i++)
+    {
+        right_pot.decrease(1);
+        delay(20);
+    }
+}
+
+void right_smoothTransition()
+{
+    for (int i = 0; i < 100; i++)
+    {
+        right_pot.increase(1);
+        delay(20);
+    }
+
+    for (int i = 0; i < 100; i++)
+    {
+        left_pot.decrease(1);
+        delay(20);
+    }
+}
 // Smooth transition between channels
 void smoothTransition()
 {
-    for (int i = 0; i <= 255; i++)
+    for (int i = 0; i < 255; i++)
     {
         if (motionDetected)
         {
