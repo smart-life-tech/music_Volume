@@ -1,4 +1,4 @@
 {
     "board": "arduino:avr:uno",
-    "sketch": "music_Volume.ino"
+    "sketch": "testCode\\testCode.ino"
 }
